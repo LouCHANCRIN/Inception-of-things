@@ -1,17 +1,55 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-
+OS = "centos/7"
 
 Vagrant.configure("2") do |config|
-  config.vm.name = "lchancri"
-  config.vm.hostname = "lchancriS"
-  config.vm.box = "centos/7"
-  config.vm.network "forwarded_port", guest: 80, host: 8080
-  # config.vm.network "private_network", ip: "192.168.33.10"
-  config.vm.provision "shell", inline: <<-SHELL
-    curl -sSL https://get.k3s.io | sh
-    mkdir /vagrant/kuberconfig
-    sudo cp /etc/rancher/k3s/k3s.yaml /vagrant/kuberconfig
-    # sed -i "s/127\.0\.0\.1/192.168.33.10/" /vagrant/kuberconfig
-  SHELL
+  config.vm.box = OS
+  # config.vm.box_url = 'http://127.0.0.1:8080'
+
+  config.vm.define "lchancriS" do |control|
+    control.vm.hostname = "lchancriS"
+    control.vm.network "forwarded_port", host: "8080", guest: "80", ip: "192.168.42.110"
+    control.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--name", "lchancriS"]
+      # [...]
+    end
+
+    config.vm.provision "shell", path: "script.sh"
+    # config.vm.provision :shell, :inline => SHELL
+    #   ls
+    #   # [...]
+    # SHELL
+    # control.vm.provision "shell", path: REDACTED
+  end
+
+  config.vm.define "lchancriSW" do |control|
+    control.vm.hostname = "lchancriSW"
+    control.vm.network "forwarded_port", host: "8081", guest: "81", ip: "192.168.42.111"
+    control.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--name", "lchancriSW"]
+      # [...]
+    end
+
+    config.vm.provision "shell", path: "script.sh"
+    # config.vm.provision "shell", inline: <<-SHELL
+    #   ls
+    # SHELL
+
+    # control.vm.provision "shell", path: REDACTED
+  end
+
+  # config.vm.provider :virtualbox do |vb|
+  #   vb.name = "lchancri"
+  # end
+  # config.vm.hostname = "lchancriS"
+  # config.vm.box = "centos/7"
+  # config.vm.network "forwarded_port", guest: 80, host: 8080
+  # # config.vm.network "private_network", ip: "192.168.33.10"
+  # # config.vm.provision "shell", path: "script.sh"
+  # config.vm.provision "shell", inline: <<-SHELL
+  #   curl -sSL https://get.k3s.io | sh
+  #   mkdir /vagrant/kuberconfig
+  #   sudo cp /etc/rancher/k3s/k3s.yaml /vagrant/kuberconfig
+  #   # sed -i "s/127\.0\.0\.1/192.168.33.10/" /vagrant/kuberconfig
+  # SHELL
 end
