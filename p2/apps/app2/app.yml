@@ -1,0 +1,60 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress_app2
+  # annotations:
+  #   kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+  -host: app2.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service_app2
+            port:
+              number: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service_app2
+spec:
+  ports:
+    - name: http
+      port: 80
+      # protocol: TCP
+  selector:
+    app:  app2
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+spec:
+  selector:
+    matchLabels:
+      app: app2
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+      - name: app2
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: app2_volume
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: app2_volume
+        configMap:
+          name: app2_html
