@@ -1,42 +1,45 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-OS = "centos/7"
 
 Vagrant.configure("2") do |config|
-  config.vm.box = OS
-  # config.vm.box_url = 'http://127.0.0.1:8080'
 
-  config.vm.define "lchancriS" do |control|
-    control.vm.hostname = "lchancriS"
-    control.vm.network "forwarded_port", host: "8080", guest: "80", ip: "192.168.56.110"
-    # control.vm.network "public_network",  ip: "192.168.42.110"
-    control.vm.provider :virtualbox do |v|
-      v.customize ["modifyvm", :id, "--name", "lchancriS"]
-      # [...]
+  config.vm.box = "centos/stream8"
+  config.vm.box_url = "https://app.vagrantup.com/centos/boxes/stream8"
+
+  # Install net-tools for all machines  
+  config.vm.provision "shell", inline: <<-SHELL
+    # yum update -y
+    yum install -y net-tools
+  SHELL
+
+  config.vm.define "yabecretS" do |control|
+    control.vm.hostname = "yabecretS"
+    control.vm.network "private_network", ip: "192.168.56.110"
+    control.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--name", "yabecretS"]
+      v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.memory = 512
+      v.cpus = 1
     end
-
-    config.vm.provision "shell", path: "script_server.sh"
-    # config.vm.provision :shell, :inline => SHELL
-    #   ls
-    #   # [...]
-    # SHELL
-    # control.vm.provision "shell", path: REDACTED
+    control.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/tmp/id_rsa.pub"
+    control.vm.provision "file", source: "~/.ssh/id_rsa", destination: "/tmp/id_rsa"
+    control.vm.provision "shell", privileged: true, path: "scripts/installS.sh"
+  end
+  
+  config.vm.define "yabecretSW" do |control|
+    control.vm.hostname = "yabecretSW"
+    control.vm.network "private_network", ip: "192.168.56.111"
+    control.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--name", "yabecretSW"]
+      v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.memory = 512
+      v.cpus = 1
+    end
+    control.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/tmp/id_rsa.pub"
+    control.vm.provision "file", source: "~/.ssh/id_rsa", destination: "/tmp/id_rsa"
+    control.vm.provision "shell", privileged: true, path: "scripts/installSW.sh"
   end
 
-  # config.vm.define "lchancriSW" do |control|
-  #   control.vm.hostname = "lchancriSW"
-  #   control.vm.network "forwarded_port", host: "8081", guest: "81", ip: "192.168.42.111"
-  #   # control.vm.network "public_network",  ip: "192.168.42.111"
-  #   control.vm.provider :virtualbox do |v|
-  #     v.customize ["modifyvm", :id, "--name", "lchancriSW"]
-  #     # [...]
-  #   end
-
-  #   config.vm.provision "shell", path: "script_worker.sh"
-  #   # config.vm.provision "shell", inline: <<-SHELL
-  #   #   ls
-  #   # SHELL
-
-  #   # control.vm.provision "shell", path: REDACTED
-  # end
 end

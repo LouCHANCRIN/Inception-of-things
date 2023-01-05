@@ -1,0 +1,27 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/stream8"
+  config.vm.box_url = "https://app.vagrantup.com/centos/boxes/stream8"
+
+  # Install net-tools for all machines  
+  config.vm.provision "shell", inline: <<-SHELL
+    # yum update -y
+    yum install -y net-tools
+  SHELL
+
+  config.vm.define "yabecretP3" do |control|
+    control.vm.hostname = "yabecretP3"
+    control.vm.network "private_network", ip: "192.168.56.110"
+    control.vm.synced_folder  ".", "/vagrant", disabled: false
+    control.vm.provider "virtualbox" do |v|
+      control.vm.network "forwarded_port", guest: 8080, host: 8080
+      control.vm.network "forwarded_port", guest: 8888, host: 8888
+      v.customize ["modifyvm", :id, "--name", "yabecretP3"]
+      v.memory = 4096
+      v.cpus = 8
+    end
+  end
+end
